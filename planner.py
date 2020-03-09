@@ -16,15 +16,15 @@ startWeek               = 11
 targetWeek              = 21
 restCycleWeeks          = 3
 restPercentage          = 70
-taperWeeks              = 1
+taperWeeks              = 2
 plateauWeeks            = 1
-taperPercentage         = 50
+taperPercentage         = 75
 targetRidePercentage    = 66.66667
-targetWeekPercentage    = 166.6667
+targetWeekPercentage    = 130
 longCommute             = 20
-maxLongCommutes         = 2
+maxLongCommutes         = 1
 commutesPerWeek         = 10
-secondRidePercentage    = 50
+secondRidePercentage    = 33.333
 stepAfterRest           = True
 
 totalWeeks = (targetWeek - startWeek) + 1
@@ -79,18 +79,19 @@ for i in range(1, totalWeeks+1):
     print(i, week, "Dist", thisWeekDistance, "Commute", commuteDist,
     "Big Ride",mainRide, "Second Ride", secondRide, "Left Overs",leftOvers)
 
-    print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
-    "Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
+    #print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
+    #"Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
 
-    url = "http://app.velohero.com/goals/edit/new"
-    request = {
-        "goal_name":"Week "+str(i),
-        "goal_from_date": "07/03/2020",#DD/MM/YYYY
-        "goal_to_date": "13/03/2020",#DD/MM/YYYY
-        "goal_workout_dist_km":200,
-        "goal_workout_dur_time":str(round(200 /16))+":00:00"
-    }
+    if(False):
+        url = "http://app.velohero.com/goals/edit/new"
+        request = {
+            "goal_name":"Week "+str(i),
+            "goal_from_date": "07/03/2020",#DD/MM/YYYY
+            "goal_to_date": "13/03/2020",#DD/MM/YYYY
+            "goal_workout_dist_km":200,
+            "goal_workout_dur_time":str(round(200 /16))+":00:00"
+        }
 
-    response = requests.get(url, data=request,auth = ('martyn.eggleton@gmail.com', 'M1tth2wv1l2H3r4'))
-    print(response, response.headers)
-    exit()
+        response = requests.post(url, data=request,auth = ('martyn.eggleton@gmail.com', 'M1tth2wv1l2h3r4'))
+        print(response, response.headers)
+        exit()
