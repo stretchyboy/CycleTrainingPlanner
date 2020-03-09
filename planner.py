@@ -7,7 +7,7 @@
 #input weekStart
 import math
 
-currentWeeklyMileage    = 50
+currentWeeklyMileage    = 100
 targetDistance          = 150
 currentStandardCommute  = 6
 targetTotalTime         = 16
@@ -16,7 +16,7 @@ targetWeek              = 21
 restCycleWeeks          = 3
 restPercentage          = 70
 taperWeeks              = 1
-plateauWeeks            = 1
+plateauWeeks            = 0
 taperPercentage         = 50
 targetRidePercentage    = 66.66667
 targetWeekPercentage    = 166.6667
@@ -26,8 +26,8 @@ commutesPerWeek         = 10
 secondRidePercentage    = 50
 
 totalWeeks = (targetWeek - startWeek) + 1
-restWeeks = math.floor((totalWeeks - plateauWeeks) / restCycleWeeks)
-steps = (totalWeeks - plateauWeeks) - restWeeks
+restWeeks = round((totalWeeks - (plateauWeeks+taperWeeks)) / restCycleWeeks)
+steps = (totalWeeks - (plateauWeeks+taperWeeks)) - (2*restWeeks)
 
 stepDistance = ((targetDistance * (targetWeekPercentage/100))- currentWeeklyMileage) / steps
 print("totalWeeks", totalWeeks, "restWeeks", restWeeks, "Steps", steps, "Step Distance", stepDistance)
@@ -38,18 +38,18 @@ thisWeekDistance = currentDistance
 for i in range(1, totalWeeks+1):
     longCommutes = math.ceil(i/(totalWeeks/maxLongCommutes))
     restWeek = False
-
     week = startWeek - 1 + i
     #print(i, week)
-    if (i <= totalWeeks - plateauWeeks):
+    if (i <= totalWeeks - (plateauWeeks+taperWeeks)):
         if(i % restCycleWeeks ):
-            step += 1
-            currentDistance += stepDistance
+            if(i % restCycleWeeks > 1):
+                step += 1
+                currentDistance += stepDistance
             thisWeekDistance = round(currentDistance)
         else:
             restWeek = True
             thisWeekDistance = round(currentDistance * (restPercentage / 100))
-    elif (i > totalWeeks - taperWeeks):
+    elif (i > (totalWeeks - taperWeeks)):
         restWeek = True
         thisWeekDistance = round(currentDistance * (taperPercentage/100))
     else:
