@@ -6,6 +6,7 @@
 #input restCycleWeeks
 #input weekStart
 import math
+import requests
 
 currentWeeklyMileage    = 100
 targetDistance          = 150
@@ -16,7 +17,7 @@ targetWeek              = 21
 restCycleWeeks          = 3
 restPercentage          = 70
 taperWeeks              = 1
-plateauWeeks            = 0
+plateauWeeks            = 1
 taperPercentage         = 50
 targetRidePercentage    = 66.66667
 targetWeekPercentage    = 166.6667
@@ -24,10 +25,14 @@ longCommute             = 20
 maxLongCommutes         = 2
 commutesPerWeek         = 10
 secondRidePercentage    = 50
+stepAfterRest           = True
 
 totalWeeks = (targetWeek - startWeek) + 1
 restWeeks = round((totalWeeks - (plateauWeeks+taperWeeks)) / restCycleWeeks)
-steps = (totalWeeks - (plateauWeeks+taperWeeks)) - (2*restWeeks)
+if stepAfterRest:
+    steps = (totalWeeks - (plateauWeeks+taperWeeks)) - restWeeks
+else:
+    steps = (totalWeeks - (plateauWeeks+taperWeeks)) - (2*restWeeks)
 
 stepDistance = ((targetDistance * (targetWeekPercentage/100))- currentWeeklyMileage) / steps
 print("totalWeeks", totalWeeks, "restWeeks", restWeeks, "Steps", steps, "Step Distance", stepDistance)
@@ -42,7 +47,7 @@ for i in range(1, totalWeeks+1):
     #print(i, week)
     if (i <= totalWeeks - (plateauWeeks+taperWeeks)):
         if(i % restCycleWeeks ):
-            if(i % restCycleWeeks > 1):
+            if(stepAfterRest or (i % restCycleWeeks > 1)):
                 step += 1
                 currentDistance += stepDistance
             thisWeekDistance = round(currentDistance)
@@ -71,5 +76,21 @@ for i in range(1, totalWeeks+1):
     leftOvers = max(0,nonCommuteDist - (mainRide+secondRide))
 
 
-    print(week, "Dist", thisWeekDistance, "Commute", commuteDist,
+    print(i, week, "Dist", thisWeekDistance, "Commute", commuteDist,
     "Big Ride",mainRide, "Second Ride", secondRide, "Left Overs",leftOvers)
+
+    print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
+    "Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
+
+    url = "http://app.velohero.com/goals/edit/new"
+    request = {
+        "goal_name":"Week "+str(i),
+        "goal_from_date": "07/03/2020",#DD/MM/YYYY
+        "goal_to_date": "13/03/2020",#DD/MM/YYYY
+        "goal_workout_dist_km":200,
+        "goal_workout_dur_time":str(round(200 /16))+":00:00"
+    }
+
+    response = requests.get(url, data=request,auth = ('martyn.eggleton@gmail.com', 'M1tth2wv1l2H3r4'))
+    print(response, response.headers)
+    exit()
