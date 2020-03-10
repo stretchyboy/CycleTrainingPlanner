@@ -7,13 +7,19 @@
 #input weekStart
 import math
 import requests
+from datetime import date
+import datetime
+delta = datetime.timedelta(days=2)
 
 currentWeeklyMileage    = 100
 targetDistance          = 150
 currentStandardCommute  = 6
 targetTotalTime         = 16
+targetTotalClimb        = 2440
+targetMaxInclinePercentage = 11
 startWeek               = 11
 targetWeek              = 21
+targetYear              = 2020
 restCycleWeeks          = 3
 restPercentage          = 70
 taperWeeks              = 2
@@ -75,6 +81,8 @@ for i in range(1, totalWeeks+1):
     secondRide = round(mainRide*(secondRidePercentage/100))
     leftOvers = max(0,nonCommuteDist - (mainRide+secondRide))
 
+    proportionOfMaxWeek = thisWeekDistance / ((targetWeekPercentage/100)*targetDistance)
+
 
     print(i, week, "Dist", thisWeekDistance, "Commute", commuteDist,
     "Big Ride",mainRide, "Second Ride", secondRide, "Left Overs",leftOvers)
@@ -82,16 +90,25 @@ for i in range(1, totalWeeks+1):
     #print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
     #"Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
 
-    if(False):
-        url = "http://app.velohero.com/goals/edit/new"
-        request = {
-            "goal_name":"Week "+str(i),
-            "goal_from_date": "07/03/2020",#DD/MM/YYYY
-            "goal_to_date": "13/03/2020",#DD/MM/YYYY
-            "goal_workout_dist_km":200,
-            "goal_workout_dur_time":str(round(200 /16))+":00:00"
-        }
 
-        response = requests.post(url, data=request,auth = ('martyn.eggleton@gmail.com', 'M1tth2wv1l2h3r4'))
+    d = str(targetYear)+"-W"+str(week-1)
+    weekStart = datetime.datetime.strptime(d + '-1', "%Y-W%W-%w")-delta
+    weekEnd= weekStart +      datetime.timedelta(days=6)
+
+
+    request = {
+        "goal_name":"Week "+str(i),
+        "goal_from_date": weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
+        "goal_to_date": weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
+        "goal_workout_dist_km": thisWeekDistance*1.6,
+        "goal_workout_dur_time":str(round(targetTotalTime*proportionOfMaxWeek))+":00:00" ,
+        "goal_workout_asc_m": round(targetTotalClimb * proportionOfMaxWeek),
+        "submit":1,
+    }
+    print(request)
+
+    if(False)  :
+        url = "http://app.velohero.com/goals/edit/new"
+        response = requests.post(url, data=request,auth = ('martyn@gmail.com', 'v1l2h3r4'))
         print(response, response.headers)
         exit()
