@@ -7,7 +7,9 @@
 #input weekStart
 import math
 import requests
+from urllib.parse import urlencode
 
+planName                = "The Longest Day"
 currentWeeklyMileage    = 100
 targetDistance          = 150
 currentStandardCommute  = 6
@@ -82,16 +84,18 @@ for i in range(1, totalWeeks+1):
     #print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
     #"Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
 
-    if(False):
-        url = "http://app.velohero.com/goals/edit/new"
+    if(True):
+        urlbase = "https://app.velohero.com/goals/edit/new"
         request = {
-            "goal_name":"Week "+str(i),
-            "goal_from_date": "07/03/2020",#DD/MM/YYYY
-            "goal_to_date": "13/03/2020",#DD/MM/YYYY
-            "goal_workout_dist_km":200,
-            "goal_workout_dur_time":str(round(200 /16))+":00:00"
+            "goal_name":            planName+": Week "+str(i),
+            "goal_from_date":       "07/03/2020",#DD/MM/YYYY
+            "goal_to_date":         "13/03/2020",#DD/MM/YYYY
+            "goal_workout_dist_km": thisWeekDistance * 1.6,
+            "goal_workout_dur_time":str(round(thisWeekDistance /10))+":00:00",
+            "submit":               1
         }
-
-        response = requests.post(url, data=request,auth = ('martyn.eggleton@gmail.com', 'M1tth2wv1l2h3r4'))
-        print(response, response.headers)
+        url = urlbase+"?"+ urlencode(request)
+        print(url)
+        #response = requests.get(urlbase, data=request,auth = ('stretchyboy', 'M1tth2w3'))
+        #print(response, response.reason, response.headers)
         exit()
