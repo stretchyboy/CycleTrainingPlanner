@@ -13,17 +13,17 @@ from datetime import date
 import datetime
 delta = datetime.timedelta(days=2)
 
-planName                = "Back to 100"
-currentWeeklyMileage    = 20
-targetDistance          = 100
+planName                = "The Longest Day"
+currentWeeklyMileage    = 75
+targetDistance          = 150
 currentStandardCommute  = 6
-targetTotalTime         = 10
-targetTotalClimb        = 1000
+targetTotalTime         = 14
+targetTotalClimb        = 2440
 targetMaxInclinePercentage = 11
-startWeek               = 23
-targetWeek              = 34
-targetYear              = 2021
-restCycleWeeks          = 3
+startWeek               = 11
+targetWeek              = 21
+targetYear              = 2020
+restCycleWeeks          = 4
 restPercentage          = 66.66667
 taperWeeks              = 2
 plateauWeeks            = 1
@@ -32,7 +32,7 @@ targetRidePercentage    = 66.66667
 targetWeekPercentage    = 140
 longCommute             = 20
 maxLongCommutes         = 1
-commutesPerWeek         = 8
+commutesPerWeek         = 10
 secondRidePercentage    = 33.333
 stepAfterRest           = True
 
@@ -100,13 +100,8 @@ for i in range(1, totalWeeks+1):
 
     urlbase = "http://app.velohero.com/goals/edit/new"
 
-    weekName = ""
-    if restWeek : 
-        weekName = "Rest "
-    weekName += "Week "+str(i)
-
     request = {
-        "goal_name":planName +" : " + weekName +" : Total",
+        "goal_name":planName +": Week "+str(i),
         "goal_from_date": weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_workout_dist_km": thisWeekDistance*1.6,
@@ -123,13 +118,13 @@ for i in range(1, totalWeeks+1):
     monday= weekStart +      datetime.timedelta(days=2)
 
     request2 = {
-        "goal_name":planName +" : "+ weekName +" : Commute",
+        "goal_name":planName +": Week "+str(i)+" Commute",
         "goal_from_date": monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_workout_dist_km": commuteDist*1.6,
         #"goal_workout_dur_time":str(round(targetTotalTime*proportionOfMaxWeek))+":00:00" ,
         #"goal_workout_asc_m": round(targetTotalClimb * proportionOfMaxWeek),
-        "goal_workout_count": commutesPerWeek,
+        "goal_workout_count": 10,
         "submit":1,
         "type_id":57086,#commute
         #"type_id":91557, # longride
@@ -137,7 +132,7 @@ for i in range(1, totalWeeks+1):
     url2 = urlbase+"?"+ urlencode(request2)
 
     request3 = {
-        "goal_name":planName +" : "+weekName+" : Long Ride",
+        "goal_name":planName +": Week "+str(i)+" Long Ride",
         "goal_from_date": weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_workout_dist_km": mainRide*1.6,
