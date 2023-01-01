@@ -8,8 +8,9 @@ with open('requirements.txt') as requirements_file:
 with open('test-requirements.txt') as requirements_file:
     test_requirements = requirements_file.read().splitlines()
 
+
 setup(
-    name='CycleTrainingPlanner',
+    name='cycle_training_planner',
     version='0.1.0',
     description='Making Cycling Training Plans Fast.',
     author='Martyn Eggleton',
@@ -18,10 +19,10 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'CycleTrainingPlanner=CycleTrainingPlanner:main',
+            'cycle_training_planner=cycle_training_planner:main',
         ],
     },
-    py_modules = ['CycleTrainingPlanner'],
+    py_modules = ['cycle_training_planner'],
     packages=find_packages(exclude=('tests', 'docs')),
     python_requires='>=3.7',
     install_requires=requirements,

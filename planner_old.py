@@ -13,42 +13,42 @@ from datetime import date
 import datetime
 delta = datetime.timedelta(days=2)
 
-planName                = "Back to 100"
-currentWeeklyMileage    = 20
-targetDistance          = 100
-currentStandardCommute  = 6
+planName                = "Back to 100 miles"
+currentWeeklyMileage    = 80
+targetDistance          = 160
+currentStandardCommute  = 10
 targetTotalTime         = 10
 targetTotalClimb        = 1000
 targetMaxInclinePercentage = 11
 startWeek               = 23
 targetWeek              = 34
 targetYear              = 2021
-restCycleWeeks          = 3
+restCycleWeeks          = 4
 restPercentage          = 66.66667
-taperWeeks              = 2
+taperWeeks              = 1
 plateauWeeks            = 1
 taperPercentage         = 66.66667
 targetRidePercentage    = 66.66667
 targetWeekPercentage    = 140
-longCommute             = 20
+longCommute             = 24
 maxLongCommutes         = 1
 commutesPerWeek         = 8
-secondRidePercentage    = 33.333
-stepAfterRest           = True
+secondRidePercentage    = 0
+stepAfterRest           = False
 
 totalWeeks = (targetWeek - startWeek) + 1
-restWeeks = round((totalWeeks - (plateauWeeks+taperWeeks)) / restCycleWeeks)
+restWeeks = math.floor((totalWeeks - (plateauWeeks+taperWeeks)) / restCycleWeeks)
 if stepAfterRest:
-    steps = (totalWeeks - (plateauWeeks+taperWeeks)) - restWeeks
+    steps = 1+(totalWeeks - (plateauWeeks+taperWeeks)) - restWeeks
 else:
-    steps = (totalWeeks - (plateauWeeks+taperWeeks)) - (2*restWeeks)
+    steps = 1+(totalWeeks - (plateauWeeks+taperWeeks)) - (2*restWeeks)
 
 stepDistance = ((targetDistance * (targetWeekPercentage/100))- currentWeeklyMileage) / steps
 print("totalWeeks", totalWeeks, "restWeeks", restWeeks, "Steps", steps, "Step Distance", stepDistance)
 
 currentDistance = currentWeeklyMileage
-step = 0
-thisWeekDistance = currentDistance
+step = 1
+thisWeekDistance = currentDistance +stepDistance
 for i in range(1, totalWeeks+1):
     longCommutes = math.ceil(i/(totalWeeks/maxLongCommutes))
     restWeek = False
@@ -58,7 +58,7 @@ for i in range(1, totalWeeks+1):
         if(i % restCycleWeeks ):
             if(stepAfterRest or (i % restCycleWeeks > 1)):
                 step += 1
-                currentDistance += stepDistance
+                currentDistance = currentWeeklyMileage + (step * stepDistance)        
             thisWeekDistance = round(currentDistance)
         else:
             restWeek = True
@@ -87,11 +87,11 @@ for i in range(1, totalWeeks+1):
     proportionOfMaxWeek = thisWeekDistance / ((targetWeekPercentage/100)*targetDistance)
     proportionOfMaxRide = mainRide / targetDistance
 
-    print(i, week, "Dist", thisWeekDistance, "Commute", commuteDist,
+    print(i, week,step, "Dist", thisWeekDistance, "Commute", commuteDist,
     "Big Ride",mainRide, "Second Ride", secondRide, "Left Overs",leftOvers)
 
-    #print(i, week, "Dist", thisWeekDistance*1.6, "Commute", commuteDist*1.6,
-    #"Big Ride",mainRide*1.6, "Second Ride", secondRide*1.6, "Left Overs",leftOvers*1.6)
+    #print(i, week, "Dist", thisWeekDistance, "Commute", commuteDist,
+    #"Big Ride",mainRide, "Second Ride", secondRide, "Left Overs",leftOvers)
 
 
     d = str(targetYear)+"-W"+str(week-1)
@@ -109,7 +109,7 @@ for i in range(1, totalWeeks+1):
         "goal_name":planName +" : " + weekName +" : Total",
         "goal_from_date": weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
-        "goal_workout_dist_km": thisWeekDistance*1.6,
+        "goal_workout_dist_km": thisWeekDistance,
         "goal_workout_dur_time":str(round(targetTotalTime*proportionOfMaxWeek))+":00:00" ,
         "goal_workout_asc_m": round(targetTotalClimb * proportionOfMaxWeek),
         "goal_workout_count": 12,
@@ -126,7 +126,7 @@ for i in range(1, totalWeeks+1):
         "goal_name":planName +" : "+ weekName +" : Commute",
         "goal_from_date": monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
-        "goal_workout_dist_km": commuteDist*1.6,
+        "goal_workout_dist_km": commuteDist,
         #"goal_workout_dur_time":str(round(targetTotalTime*proportionOfMaxWeek))+":00:00" ,
         #"goal_workout_asc_m": round(targetTotalClimb * proportionOfMaxWeek),
         "goal_workout_count": commutesPerWeek,
@@ -140,7 +140,7 @@ for i in range(1, totalWeeks+1):
         "goal_name":planName +" : "+weekName+" : Long Ride",
         "goal_from_date": weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
         "goal_to_date": monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
-        "goal_workout_dist_km": mainRide*1.6,
+        "goal_workout_dist_km": mainRide,
         "goal_workout_dur_time":str(round(targetTotalTime*proportionOfMaxRide))+":00:00" ,
         "goal_workout_asc_m": round(targetTotalClimb * proportionOfMaxRide),
         "goal_workout_count": 1,
@@ -149,7 +149,7 @@ for i in range(1, totalWeeks+1):
     }
     url3 = urlbase+"?"+ urlencode(request3)
 
-    if (True):
+    if (False):
         webbrowser.open_new_tab(url1)
         webbrowser.open_new_tab(url2)
         webbrowser.open_new_tab(url3)

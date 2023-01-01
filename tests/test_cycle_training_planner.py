@@ -1,5 +1,5 @@
 import pytest
-from CycleTrainingPlanner import Plan
+from cycle_training_planner import Plan
 
 '''
  planName                = "Test Plan"

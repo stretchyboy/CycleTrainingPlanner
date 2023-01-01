@@ -1,5 +1,5 @@
 import argparse
-from .CycleTrainingPlanner import Plan
+from CycleTrainingPlanner import Plan
 
 '''
 parser = argparse.ArgumentParser(prog='Prettify GitHub Log', description='Make git logs easier for use in scenarios when communicating the progress of a project to none experts.')
