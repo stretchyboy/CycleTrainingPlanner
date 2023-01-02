@@ -1,18 +1,11 @@
-#input currentWeeklyMileage
-#input currentStandardCommute
-#input targetDistance
-#input targetTotalTime
-#input targetDate
-#input restCycleWeeks
-#input weekStart
 import math
 import webbrowser
-import requests
+#import requests
+from urllib.request import urlopen
 from urllib.parse import urlencode
 from datetime import date
 import datetime
 delta = datetime.timedelta(days=2)
-
 
 class Week():
     _plan = None
@@ -48,10 +41,22 @@ class Week():
         self.rides = self.plan.commutesPerWeek
 
         nonCommuteDist = max(0, self.distance - self.commute)
-        maxRide = (self.plan.targetRidePercentage/100)*self.plan.targetDistance
-        self.longRide = round(min(maxRide, nonCommuteDist * (100/(100 + self.plan.secondRidePercentage))))
-        self.secondRide = nonCommuteDist - self.longRide
-
+        maxLongRide = (self.plan.targetRidePercentage/100)*self.plan.targetDistance
+        maxSecondRide = (self.plan.secondRidePercentageOfL/100)*maxLongRide
+        
+        self.secondRide = 0
+        
+        #T = L + (L * X)
+        #(T/ (1 + X)) = L
+        
+        if not self.reduced:
+            balancedLongRide = math.ceil(nonCommuteDist/ (1+(self.plan.secondRidePercentageOfL/100)))
+            potentialSecondRide = round(min(nonCommuteDist /2, nonCommuteDist - balancedLongRide , maxSecondRide))
+            if(potentialSecondRide >= self.plan.minSecondRide):
+                self.secondRide = potentialSecondRide
+        
+        self.longRide = round(min(maxLongRide, nonCommuteDist - self.secondRide))
+                
         if(self.longRide > 0 ):
             self.rides += 1
 
@@ -123,10 +128,12 @@ class Week():
 
 class Plan():
     planName                = "Test Plan"
-    currentWeeklyMileage    = 0
+    currentWeeklyDistance   = 0
     targetDistance          = 100
     targetTotalTime         = 10
     targetTotalClimb        = 1000
+    week1Step               = False
+    minSecondRide           = 20
     targetMaxInclinePercentage = 10
     startWeek               = 1
     targetWeek              = 20
@@ -142,7 +149,7 @@ class Plan():
     longCommute             = 20
     maxLongCommutes         = 2
     commutesPerWeek         = 10
-    secondRidePercentage    = 20
+    secondRidePercentageOfL = 50
     stepAfterRest           = False
     _weeks                  = None
     _steps                  = None
@@ -255,7 +262,7 @@ class Plan():
         ValueError: week must be > 0
         """
         if (week == 1 ):
-            return True
+            return self.week1Step
         if (self.isReducedWeek(week) or self.isPlateauWeek(week)):
             return False
         if self.stepAfterRest :
@@ -286,7 +293,7 @@ class Plan():
             return self._weeks
 
         self._weeks = []
-        step = 0
+        step = 0 # if self.week1Step else 1
         i = 0
         for i in range(1, self.totalWeeks+1):
             if self.isStepWeek(i):
@@ -305,7 +312,7 @@ class Plan():
         
     
     def plan(self):
-        self.stepDistance = ((self.targetDistance * (self.targetWeekPercentage/100))- self.currentWeeklyMileage) / self.steps
+        self.stepDistance = ((self.targetDistance * (self.targetWeekPercentage/100))- self.currentWeeklyDistance) / (self.steps-1)
         print("self.steps", self.steps, "self.stepDistance", self.stepDistance)
         for week in self.weeks:
             week.plan = self
@@ -315,36 +322,41 @@ class Plan():
         return self.weeks
 
     
-    def requests(self, do=False):
+    def requests(self, echo=False, do=False):
         urlbase = "http://app.velohero.com/goals/edit/new"
         for week in self.weeks:
             week.plan = self
             requests = week.getRequests()
             for request in requests:
                 url = urlbase+"?"+ urlencode(request)
-                print (url)
+                if echo :
+                    print (url)
                 if(do):
+                    #urlopen(url)
                     webbrowser.open_new_tab(url)
 
 
 
 if __name__ == "__main__":
     p = Plan()
-    p.currentWeeklyDistance    = 129
-    #p.restCycleWeeks = 3
-    #p.stepAfterRest = True
-    p.startWeek               = 25
-    p.targetWeek              = 35
-    p.currentStandardCommute  = 8
-    p.longCommute             = 13
-    p.maxLongCommutes         = 2
-    p.commutesPerWeek         = 10
-    p.secondRidePercentage    = 30
-    p.plateauWeeks            = 1
-    p.targetWeekPercentage    = 125
-    p.targetYear              = 2022
-    
+    p.planName                  = "NbNW Plan"
+    p.currentWeeklyDistance     = 64
+    p.startWeek                 = 2
+    p.targetWeek                = 22
+    p.currentStandardCommute    = 7
+    p.longCommute               = 15
+    p.maxLongCommutes           = 2
+    p.commutesPerWeek           = 10
+    p.targetYear                = 2023
+    p.targetDistance            = 200
+    p.targetTotalTime           = 14
+    p.targetTotalClimb          = 3510
+    p.plateauWeeks              = 0
+    p.stepAfterRest             = False
+    p.targetRidePercentage      = 60
+    p.secondRidePercentageOfL   = 75
+    p.targetWeekPercentage      = 150
     p.plan()
     print("Weeks", p.weeks)
-    #p.requests(False)
+    p.requests(do=True)
     
