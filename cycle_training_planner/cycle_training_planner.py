@@ -7,6 +7,7 @@ from datetime import date
 import datetime
 delta = datetime.timedelta(days=2)
 
+
 class Week():
     _plan = None
     week = 0
@@ -63,11 +64,15 @@ class Week():
         if(self.secondRide > 0 ):
             self.rides += 1
     
-        d = str(self.plan.targetYear)+"-W"+str(self.plan.startWeek - 2 + self.week)
-        self.weekStart = datetime.datetime.strptime(d + '-1', "%Y-W%W-%w")-delta
-        self.weekEnd= self.weekStart +      datetime.timedelta(days=6)
-
         
+    @property
+    def weekStart(self):
+        d = str(self.plan.targetYear)+"-W"+str(self.plan.startWeek - 2 + self.week)
+        return datetime.datetime.strptime(d + '-1', "%Y-W%W-%w")-delta
+    
+    @property
+    def weekEnd(self):
+        return self.weekStart +      datetime.timedelta(days=6)  
  
     @property
     def name(self):
@@ -130,11 +135,11 @@ class Plan():
     planName                = "Test Plan"
     currentWeeklyDistance   = 0
     targetDistance          = 100
-    targetTotalTime         = 10
-    targetTotalClimb        = 1000
+    #targetTotalTime         = 10
+    #targetTotalClimb        = 1000
     week1Step               = False
     minSecondRide           = 20
-    targetMaxInclinePercentage = 10
+    #targetMaxInclinePercentage = 10
     startWeek               = 1
     targetWeek              = 20
     targetYear              = 2022
@@ -349,8 +354,8 @@ if __name__ == "__main__":
     p.commutesPerWeek           = 10
     p.targetYear                = 2023
     p.targetDistance            = 200
-    p.targetTotalTime           = 14
-    p.targetTotalClimb          = 3510
+    #p.targetTotalTime           = 14
+    #p.targetTotalClimb          = 3510
     p.plateauWeeks              = 0
     p.stepAfterRest             = False
     p.targetRidePercentage      = 60
@@ -358,5 +363,5 @@ if __name__ == "__main__":
     p.targetWeekPercentage      = 150
     p.plan()
     print("Weeks", p.weeks)
-    p.requests(do=True)
+    #p.requests(do=True)
     
