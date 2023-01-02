@@ -97,27 +97,7 @@ class Week():
     def getRequests(self):
 
         requests = []
-        requests.append({
-            "goal_name":            self.plan.planName +" : " + self.name +" : Total",
-            "goal_from_date":       self.weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_workout_dist_km": self.distance,
-            "goal_workout_count":   self.rides,
-            "submit":               1,
-        })
-
-
-        monday= self.weekStart + datetime.timedelta(days=2)
-        requests.append({
-            "goal_name":            self.plan.planName +" : "+ self.name +" : Commute",
-            "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_workout_dist_km": self.commute,
-            "goal_workout_count":   self.plan.commutesPerWeek,
-            "type_id":57086,
-            "submit":1
-        })
-
+        
         if(self.longRide > 0):
             requests.append({
                 "goal_name":            self.plan.planName +" : "+ self.name +" : Long Ride",
@@ -129,6 +109,26 @@ class Week():
                 "submit":1
             })
 
+        monday= self.weekStart + datetime.timedelta(days=2)
+        requests.append({
+            "goal_name":            self.plan.planName +" : "+ self.name +" : Commute",
+            "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+            "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
+            "goal_workout_dist_km": self.commute,
+            "goal_workout_count":   self.plan.commutesPerWeek,
+            "type_id":57086,
+            "submit":1
+        })
+        
+        requests.append({
+            "goal_name":            self.plan.planName +" : " + self.name +" : Total",
+            "goal_from_date":       self.weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
+            "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
+            "goal_workout_dist_km": self.distance,
+            "goal_workout_count":   self.rides,
+            "submit":               1,
+        })
+        
         return requests
 
 class Plan():
