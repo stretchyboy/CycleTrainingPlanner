@@ -30,13 +30,13 @@ class Week():
         self.planWeek()
     
     def planWeek(self):
-        longCommutes = math.ceil(self.week/(self.plan.totalWeeks/self.plan.maxLongCommutes))
+        longCommutes = round(self.step/(self.plan.steps/self.plan.maxLongCommutes))
         distance = self.plan.currentWeeklyDistance + (self.step * self.plan.stepDistance) 
         if self.reduced:
             distance = distance * (self.plan.restPercentage / 100)
-            self.commute = self.plan.commutesPerWeek * self.plan.currentStandardCommute
+            self.commute = round(min(distance, self.plan.commutesPerWeek * self.plan.currentStandardCommute))
         else:
-            self.commute = (self.plan.currentStandardCommute * (self.plan.commutesPerWeek - longCommutes )) + (self.plan.longCommute * longCommutes)
+            self.commute = round(min(distance, (self.plan.currentStandardCommute * (self.plan.commutesPerWeek - longCommutes )) + (self.plan.longCommute * longCommutes)))
 
         self.distance = round(distance)
         self.rides = self.plan.commutesPerWeek
@@ -50,13 +50,16 @@ class Week():
         #T = L + (L * X)
         #(T/ (1 + X)) = L
         
-        if not self.reduced:
+        if self.reduced:
+            self.longRide = max(nonCommuteDist, round(self.plan.currentLRDistance + (self.step * self.plan.defaultLRStep)* (self.plan.restPercentage / 100)))
+            
+        else :
             balancedLongRide = math.ceil(nonCommuteDist/ (1+(self.plan.secondRidePercentageOfL/100)))
             potentialSecondRide = round(min(nonCommuteDist /2, nonCommuteDist - balancedLongRide , maxSecondRide))
             if(potentialSecondRide >= self.plan.minSecondRide):
                 self.secondRide = potentialSecondRide
-        
-        self.longRide = round(min(maxLongRide, nonCommuteDist - self.secondRide))
+            
+            self.longRide = round(min(maxLongRide, nonCommuteDist - self.secondRide))
                 
         if(self.longRide > 0 ):
             self.rides += 1
@@ -98,6 +101,14 @@ class Week():
 
         requests = []
         
+        goal_workout_asc_m = (self.step/self.plan.steps)* 1000 * self.longRide * ((self.plan.ascentPercentage/100) * self.plan.targetTotalAscent) / (1000 * self.plan.targetDistance)
+        if self.reduced : 
+            goal_workout_asc_m = goal_workout_asc_m * (self.plan.restPercentage / 100)
+        goal_workout_asc_m = int(goal_workout_asc_m)
+        #print("goal_workout_asc_m" , goal_workout_asc_m)
+
+        monday= self.weekStart + datetime.timedelta(days=2)
+        
         if(self.longRide > 0):
             requests.append({
                 "goal_name":            self.plan.planName +" : "+ self.name +" : Long Ride",
@@ -105,11 +116,11 @@ class Week():
                 "goal_to_date":         monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
                 "goal_workout_dist_km": self.longRide,
                 "goal_workout_count":   1,
+                "goal_workout_asc_m" : goal_workout_asc_m ,
                 "type_id":91557,
                 "submit":1
             })
 
-        monday= self.weekStart + datetime.timedelta(days=2)
         requests.append({
             "goal_name":            self.plan.planName +" : "+ self.name +" : Commute",
             "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
@@ -134,9 +145,12 @@ class Week():
 class Plan():
     planName                = "Test Plan"
     currentWeeklyDistance   = 0
+    currentLRDistance       = 0 
     targetDistance          = 100
     #targetTotalTime         = 10
-    #targetTotalClimb        = 1000
+    targetTotalAscent        = 1000
+    ascentPercentage         = 110
+    
     week1Step               = False
     minSecondRide           = 20
     #targetMaxInclinePercentage = 10
@@ -318,6 +332,7 @@ class Plan():
     
     def plan(self):
         self.stepDistance = ((self.targetDistance * (self.targetWeekPercentage/100))- self.currentWeeklyDistance) / (self.steps-1)
+        self.defaultLRStep = ((self.targetDistance * (self.targetRidePercentage/100))- self.currentLRDistance) / (self.steps-1)
         print("self.steps", self.steps, "self.stepDistance", self.stepDistance)
         for week in self.weeks:
             week.plan = self
@@ -348,14 +363,14 @@ if __name__ == "__main__":
     p.currentWeeklyDistance     = 64
     p.startWeek                 = 2
     p.targetWeek                = 22
-    p.currentStandardCommute    = 7
+    p.currentStandardCommute    = 8
     p.longCommute               = 15
     p.maxLongCommutes           = 2
     p.commutesPerWeek           = 10
     p.targetYear                = 2023
     p.targetDistance            = 200
     #p.targetTotalTime           = 14
-    #p.targetTotalClimb          = 3510
+    p.targetTotalAscent          = 3510
     p.plateauWeeks              = 0
     p.stepAfterRest             = False
     p.targetRidePercentage      = 60
@@ -363,5 +378,6 @@ if __name__ == "__main__":
     p.targetWeekPercentage      = 150
     p.plan()
     print("Weeks", p.weeks)
-    #p.requests(do=True)
+    #p.requests()
+    p.requests(do=True)
     
