@@ -5,7 +5,7 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 from datetime import date
 import datetime
-delta = datetime.timedelta(days=2)
+delta = datetime.timedelta(days=0)
 
 
 class Week():
@@ -14,11 +14,14 @@ class Week():
     step = 0
     reduced = False
     distance = 0
+    commuting = True
+    commute = 0
 
-    def __init__(self, week=0, step=0, reduced = False) -> None:
+    def __init__(self, week=0, step=0, reduced = False, commuting = True) -> None:
         self.week = week
         self.step = step
         self.reduced = reduced
+        self.commuting = commuting
         
     @property
     def plan(self):
@@ -34,9 +37,12 @@ class Week():
         distance = self.plan.currentWeeklyDistance + (self.step * self.plan.stepDistance) 
         if self.reduced:
             distance = distance * (self.plan.restPercentage / 100)
-            self.commute = round(((self.plan.commutesPerWeek - 2)* self.plan.currentStandardCommute))
+            self.commute = round(((self.plan.commutesPerRestWeek)* self.plan.currentStandardCommute))
         else:
             self.commute = round(((self.plan.currentStandardCommute * (self.plan.commutesPerWeek - longCommutes )) + (self.plan.longCommute * longCommutes)))
+
+        if (self.commuting == False):
+            self.commute = 0
 
         self.distance = round(distance)
         self.rides = self.plan.commutesPerWeek
@@ -54,7 +60,7 @@ class Week():
         #(T/ (1 + X)) = L
         
         if self.reduced:
-            self.longRide = max(nonCommuteDist, round(self.plan.currentLRDistance + (self.step * self.plan.defaultLRStep)* (self.plan.restPercentage / 100)))
+            self.longRide = min(maxLongRide, max(nonCommuteDist, round(self.plan.currentLRDistance + (self.step * self.plan.defaultLRStep)* (self.plan.restPercentage / 100))))
         else :
             balancedLongRide = math.ceil(nonCommuteDist/ (1+(self.plan.secondRidePercentageOfL/100)))
             potentialSecondRide = round(min(nonCommuteDist /2, nonCommuteDist - balancedLongRide , maxSecondRide))
@@ -74,7 +80,8 @@ class Week():
         
     @property
     def weekStart(self):
-        d = str(self.plan.targetYear)+"-W"+str(self.plan.startWeek - 2 + self.week)
+        d = str(self.plan.targetYear)+"-W"+str(self.plan.startWeek + self.week-1)
+        #return datetime.datetime.strptime(d + '-1', "%Y-W%W-%w")-delta
         return datetime.datetime.strptime(d + '-1', "%Y-W%W-%w")-delta
     
     @property
@@ -92,12 +99,12 @@ class Week():
 
     def __repr__(self):
         r = "\n["+str(self.week)
-        r += "\tWS:"+self.weekStart.strftime("%d/%m/%Y")
-        r += "\tS:"+str(self.step)
-        r += "\tN:"+str(self.rides)
-        r += "\tR:"+ str(self.reduced)+"\tD:"+ str(self.distance)
-        r += "\tC:"+ str(self.commute)
-        r += "\tLR:"+ str(self.longRide)+"\tSR:"+ str(self.secondRide)
+        r += "  \tWS:"+self.weekStart.strftime("%d/%m/%Y")
+        r += " \tS:"+str(self.step)
+        r += " \tN:"+str(self.rides)
+        r += " \tR:"+ str(self.reduced)+"\tD:"+ str(self.distance)
+        r += " \tC:"+ str(self.commute)
+        r += " \tLR:"+ str(self.longRide)+"\tSR:"+ str(self.secondRide)
         r += "]"
         return r
 
@@ -111,13 +118,14 @@ class Week():
         goal_workout_asc_m = int(goal_workout_asc_m)
         #print("goal_workout_asc_m" , goal_workout_asc_m)
 
-        monday= self.weekStart + datetime.timedelta(days=2)
-        
+        monday= self.weekStart 
+        friday= self.weekStart + datetime.timedelta(days=4)
+
         if(self.longRide > 0):
             requests.append({
                 "goal_name":            self.plan.planName +" : "+ self.name +" : Long Ride",
-                "goal_from_date":       self.weekStart.strftime("%d/%m/%Y"),#DD/MM/YYYY
-                "goal_to_date":         monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_from_date":       friday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
                 "goal_workout_dist_km": self.longRide,
                 "goal_workout_count":   1,
                 "goal_workout_asc_m" : goal_workout_asc_m ,
@@ -125,15 +133,27 @@ class Week():
                 "submit":1
             })
 
-        requests.append({
-            "goal_name":            self.plan.planName +" : "+ self.name +" : Commute",
-            "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
-            "goal_workout_dist_km": self.commute,
-            "goal_workout_count":   self.plan.commutesPerWeek,
-            "type_id":57086,
-            "submit":1
-        })
+        if(self.secondRide > 0):
+            requests.append({
+                "goal_name":            self.plan.planName +" : "+ self.name +" : Second Ride",
+                "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_to_date":         self.weekEnd.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_workout_dist_km": self.secondRide,
+                "goal_workout_count":   1,
+                "type_id":57085,
+                "submit":1
+            })
+
+        if(self.commute > 0):
+            requests.append({
+                "goal_name":            self.plan.planName +" : "+ self.name +" : Commute",
+                "goal_from_date":       monday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_to_date":         friday.strftime("%d/%m/%Y"),#DD/MM/YYYY
+                "goal_workout_dist_km": self.commute,
+                "goal_workout_count":   self.plan.commutesPerWeek,
+                "type_id":57086,
+                "submit":1
+            })
         
         requests.append({
             "goal_name":            self.plan.planName +" : " + self.name +" : Total",
@@ -161,6 +181,7 @@ class Plan():
     startWeek               = 1
     targetWeek              = 20
     targetYear              = 2022
+    restWeeks               = []
     restCycleWeeks          = 4
     restPercentage          = 50
     taperWeeks              = 2
@@ -172,6 +193,8 @@ class Plan():
     longCommute             = 15
     maxLongCommutes         = 2
     commutesPerWeek         = 10
+    commutesPerRestWeek     = 8
+    nonCommuteWeeks          = []
     secondRidePercentageOfL = 50
     stepAfterRest           = False
     _weeks                  = None
@@ -180,6 +203,26 @@ class Plan():
 
     def __init__(self) -> None:
         pass
+
+    
+    def isCommuteWeek(self, week = 1):
+        """Return if it is a commute week.
+
+        >>> p=Plan()
+        >>> p.isCommuteWeek(1) 
+        True
+        >>> p.isCommuteWeek(-1)
+        Traceback (most recent call last):
+            ...
+        ValueError: week must be > 0
+        """
+        if not week > 0:
+            raise ValueError("week must be > 0")
+        if(len(self.nonCommuteWeeks)):
+            return week not in self.nonCommuteWeeks
+        
+        return True
+    
 
     def isRestWeek(self, week = 1):
         """Return if it is a rest week.
@@ -196,6 +239,9 @@ class Plan():
         """
         if not week > 0:
             raise ValueError("week must be > 0")
+        if(len(self.restWeeks)):
+            return week in self.restWeeks
+        
         return (week % self.restCycleWeeks) == 0
 
     def isTaperWeek(self, week = 1):
@@ -324,9 +370,10 @@ class Plan():
                 step = step + 1
             
             week = Week(
-                week=i,
-                step=step,
-                reduced= self.isReducedWeek(i)
+                week = i,
+                step = step,
+                reduced = self.isReducedWeek(i),
+                commuting = self.isCommuteWeek(i)
             )
             self._weeks.append(week)
         self._steps = step
@@ -335,8 +382,8 @@ class Plan():
         
     
     def plan(self):
-        self.stepDistance = ((self.targetDistance * (self.targetWeekPercentage/100))- self.currentWeeklyDistance) / (self.steps-1)
-        self.defaultLRStep = ((self.targetDistance * (self.targetRidePercentage/100))- self.currentLRDistance) / (self.steps-1)
+        self.stepDistance = ((self.targetDistance * (self.targetWeekPercentage/100))- self.currentWeeklyDistance) / (self.steps)
+        self.defaultLRStep = ((self.targetDistance * (self.targetRidePercentage/100))- self.currentLRDistance) / (self.steps)
         print("self.steps", self.steps, "self.stepDistance", self.stepDistance)
         for week in self.weeks:
             week.plan = self
@@ -363,25 +410,32 @@ class Plan():
 
 if __name__ == "__main__":
     p = Plan()
-    p.planName                  = "NbNW Plan"
-    p.currentWeeklyDistance     = 64
-    p.startWeek                 = 2
-    p.targetWeek                = 22
-    p.currentStandardCommute    = 8
+    p.planName                  = "NbNW 24 Plan"
+    p.currentWeeklyDistance     = 70
+    p.startWeek                 = 1
+    p.targetWeek                = 21
+    p.currentStandardCommute    = 7
     p.longCommute               = 15
     p.maxLongCommutes           = 2
     p.commutesPerWeek           = 10
-    p.targetYear                = 2023
-    p.targetDistance            = 200
-    #p.targetTotalTime           = 14
-    p.targetTotalAscent          = 3510
+    p.targetYear                = 2024
+    p.targetDistance            = 212
+    p.targetTotalTime           = 12
+    p.targetTotalAscent         = 3510
+    p.restCycleWeeks            = 4
+    p.restWeeks                 = [4,8,11,14,18]
+    p.restPercentage            = 50
+    p.taperWeeks                = 2
     p.plateauWeeks              = 0
-    p.stepAfterRest             = False
-    p.targetRidePercentage      = 60
-    p.secondRidePercentageOfL   = 75
+
+    p.stepAfterRest             = True
+    p.targetRidePercentage      = 75
+    p.secondRidePercentageOfL   = 50
     p.targetWeekPercentage      = 150
+    p.nonCommuteWeeks           = [1, 7, 14, 15]
+    p.minSecondRide             = 10
     p.plan()
     print("Weeks", p.weeks)
-    #p.requests()
+    p.requests(echo=True)
     #p.requests(do=True)
     
