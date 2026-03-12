@@ -1,0 +1,21 @@
+{
+  "nbnw_plan_2023_ascent": {
+    "default": [
+      "routes/NBNW_pt1_2023.gpx",
+      "routes/NBNW_pt2_2023.gpx"
+    ],
+    "events": {
+      "2023-04-22": [
+        "routes/23-103_Paris_in_the_Spring_109k_Audax_route.gpx"
+      ],
+      "2023-05-13": [
+        "routes/22-931 Beyond the Roaches 2023.gpx"
+      ]
+    }
+  },
+  "nbnw_plan_2024": [
+    "routes/NBNW_pt1_2023.gpx",
+    "routes/NBNW_pt2_2023.gpx"
+  ],
+  "routes_default": []
+}

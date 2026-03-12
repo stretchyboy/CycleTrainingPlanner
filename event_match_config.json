@@ -1,0 +1,9 @@
+{
+  "event_window_days": 2,
+  "event_dates": [
+    "2023-04-22",
+    "2023-05-13"
+  ],
+  "prefer_explicit_event_dates": true,
+  "event_selection": "two_day_consecutive_max"
+}
